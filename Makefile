@@ -2,8 +2,8 @@ SRC_DIR  := src
 OBJ_DIR  := obj
 BIN_DIR  := bin
 CPPFLAGS := -Iinclude
-CFLAGS   := -Wall
-CXXFLAGS := -Wall
+CFLAGS   := -Wall -Wextra -pedantic -Wshadow
+CXXFLAGS := -Wall -Wextra -pedantic -Wshadow -std=c++20
 LDLIBS   := -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lglfw
 
 .PHONY: all clean

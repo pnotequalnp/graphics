@@ -17,6 +17,7 @@ std::pair<gl_id, std::optional<std::string>> link_program(
     const std::vector<gl_id>& shaders);
 gl_id create_vertex_array_object();
 gl_id create_vertex_buffer_object();
+gl_id create_element_buffer_object();
 
 int main() {
   // initialize window
@@ -74,15 +75,32 @@ int main() {
   glDeleteShader(fragmentShader);
 
   // load data
+  const float vertices[] = {
+      0.5f,  0.5f,  0.0f,  // top right
+      0.5f,  -0.5f, 0.0f,  // bottom right
+      -0.5f, -0.5f, 0.0f,  // bottom left
+      -0.5f, 0.5f,  0.0f   // top left
+  };
+
+  const unsigned int indices[] = {
+      0, 1, 3,  // first triangle
+      1, 2, 3   // second triangle
+  };
+
   const auto VAO = create_vertex_array_object();
   glBindVertexArray(VAO);
 
-  const float vertices[] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
-                            0.0f,  0.0f,  0.5f, 0.0f};
-
   const auto VBO = create_vertex_buffer_object();
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,
+               GL_STATIC_DRAW);
+
+  const auto EBO = create_element_buffer_object();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+               GL_STATIC_DRAW);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
   glEnableVertexAttribArray(0);
@@ -96,7 +114,7 @@ int main() {
 
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -178,4 +196,10 @@ gl_id create_vertex_buffer_object() {
   gl_id VBO;
   glGenBuffers(1, &VBO);
   return VBO;
+}
+
+gl_id create_element_buffer_object() {
+  gl_id EBO;
+  glGenBuffers(1, &EBO);
+  return EBO;
 }

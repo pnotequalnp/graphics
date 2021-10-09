@@ -15,8 +15,11 @@ std::pair<gl_id, std::optional<std::string>> load_shader_file(
     const std::string& filename, const int shader_type);
 std::pair<gl_id, std::optional<std::string>> link_program(
     const std::vector<gl_id>& shaders);
+gl_id create_vertex_array_object();
+gl_id create_vertex_buffer_object();
 
 int main() {
+  // initialize window
   glfwInit();
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -42,14 +45,7 @@ int main() {
   framebuffer_size_callback(window, 800, 600);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-  const float vertices[] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
-                            0.0f,  0.0f,  0.5f, 0.0f};
-
-  gl_id VBO;
-  glGenBuffers(1, &VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
+  // load shaders
   const auto [vertexShader, vertexError] =
       load_shader_file("shaders/vertex.glsl", GL_VERTEX_SHADER);
   if (vertexError) {
@@ -74,16 +70,33 @@ int main() {
     return -1;
   }
 
-  glUseProgram(shaderProgram);
-
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
 
+  // load data
+  const auto VAO = create_vertex_array_object();
+  glBindVertexArray(VAO);
+
+  const float vertices[] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
+                            0.0f,  0.0f,  0.5f, 0.0f};
+
+  const auto VBO = create_vertex_buffer_object();
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+  glEnableVertexAttribArray(0);
+
+  // render loop
   while (!glfwWindowShouldClose(window)) {
     process_input(window);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(shaderProgram);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -153,4 +166,16 @@ std::pair<gl_id, std::optional<std::string>> load_shader_file(
   } else {
     return {shader, {}};
   }
+}
+
+gl_id create_vertex_array_object() {
+  gl_id VAO;
+  glGenVertexArrays(1, &VAO);
+  return VAO;
+}
+
+gl_id create_vertex_buffer_object() {
+  gl_id VBO;
+  glGenBuffers(1, &VBO);
+  return VBO;
 }
